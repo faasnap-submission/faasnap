@@ -12,9 +12,9 @@
     - Start a local Redis instance on the default port 6379.
     - Populate Redis with files in `resources` directory. Keys should be the last parts of filenames (`basename`).
 4. Configure `test.json`:
-    - `home_dir` is current directory
-    - `test_dir` is the where snapshots should be located
-    - `snapfaas.executables.vanilla` and `uffd` both are the path to the built Firecracker executable
+    - `home_dir` is the current directory
+    - `test_dir` is where snapshot files will be located
+    - `snapfaas.executables.vanilla` and `uffd` both are the path of the built Firecracker executable
 5. Copy files into test_dir, including:
     - kernels: *.vmlinux.bin
     - images: rootfs/debian-rootfs.ext4
