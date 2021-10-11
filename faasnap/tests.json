@@ -1,0 +1,282 @@
+{
+    "home_dir": "...",
+    "host": "http://<your-ip>:8080",
+    "trace_api": "http://<your-ip>/api/v2/trace",
+    "test_dir": "...",
+    "repeat": 1,
+    "parallelism": [1],
+    "par_snapshots": [1],
+    "input_order": [0, 1],
+    "vcpu": 2,
+    "setting": [
+        "vanilla",
+        "vanilla-cache",
+        "reap",
+        "conpaging",
+        "per-region",
+        "faasnap"
+    ],
+    "function": [
+        "hello",
+        "read",
+        "mmap",
+        "ffmpeg",
+        "json",
+        "image",
+        "matmul",
+        "pyaes",
+        "chameleon"
+    ],
+    "snapfaas": {
+        "log_level": "Warning",
+        "base_path": "<test_dir>",
+        "kernels": {
+            "v4.14": "<home_dir>/vmlinux.bin",
+            "sanpage": "<home_dir>/sanpage-vmlinux.bin"
+        },
+        "images": {
+            "debian": "<test_dir>/debian-rootfs.ext4"
+        },
+        "executables": {
+            "vanilla": "<firecracker_executable>",
+            "uffd": "<firecracker_executable>"
+        },
+        "redis_host": "...",
+        "redis_passwd": "..."
+    },
+
+    "settings": {
+        "vanilla": {
+            "name": "vanilla",
+            "prepare_steps": "vanilla",
+            "invoke_steps": "vanilla",
+            "record_regions": {
+                "record_regions": false
+            },
+            "patch_state": {
+                "dig_hole": false,
+                "load_cache": false,
+                "drop_cache": true
+            },
+            "invocation": {
+                "use_mem_file": true,
+                "overlay_regions": false,
+                "use_ws_file": false
+            }
+        },        
+        "vanilla-cache": {
+            "name": "vanilla-cache",
+            "prepare_steps": "vanilla",
+            "invoke_steps": "vanilla",
+            "record_regions": {
+                "record_regions": false
+            },
+            "patch_state": {
+                "dig_hole": false,
+                "load_cache": false,
+                "drop_cache": false
+            },
+            "invocation": {
+                "use_mem_file": true,
+                "overlay_regions": false,
+                "use_ws_file": false
+            }
+        },
+        "warm": {
+            "name": "warm"
+        },
+        "per-region": {
+            "name": "per-region",
+            "prepare_steps": "mincore",
+            "invoke_steps": "mincore",
+            "mincore_size": 1024,
+            "record_regions": {
+                "record_regions": true,
+                "size_threshold": 0,
+                "interval_threshold": 32
+            },
+            "patch_base_state": {
+                "dig_hole": false,
+                "load_cache": false,
+                "drop_cache": true
+            },
+            "patch_state": {
+                "dig_hole": false,
+                "load_cache": false,
+                "drop_cache": true
+            },
+            "patch_mincore": {
+                "trim_regions": false
+            },
+            "invocation": {
+                "use_mem_file": false,
+                "overlay_regions": true,
+                "use_ws_file": false
+            }
+        },
+        "faasnap": {
+            "name": "faasnap",
+            "prepare_steps": "mincore",
+            "invoke_steps": "mincore",
+            "mincore_size": 1024,
+            "record_regions": {
+                "record_regions": true,
+                "size_threshold": 0,
+                "interval_threshold": 32
+            },
+            "patch_base_state": {
+                "dig_hole": false,
+                "load_cache": false,
+                "drop_cache": true
+            },
+            "patch_state": {
+                "dig_hole": false,
+                "load_cache": false,
+                "drop_cache": true
+            },
+            "patch_mincore": {
+                "trim_regions": false,
+                "to_ws_file": "<test_dir>/wsfile",
+                "inactive_ws": false,
+                "zero_ws": false,
+                "size_threshold": 0,
+                "interval_threshold": 32,
+                "drop_ws_cache": true
+            },
+            "invocation": {
+                "use_mem_file": false,
+                "overlay_regions": true,
+                "use_ws_file": true
+            }
+        },
+        "con-paging": {
+            "name": "con-paging",
+            "prepare_steps": "emumincore",
+            "invoke_steps": "mincore",
+            "record_regions": {
+                "record_regions": false
+            },
+            "patch_base_state": {
+                "dig_hole": false,
+                "load_cache": false,
+                "drop_cache": true
+            },
+            "patch_state": {
+                "dig_hole": false,
+                "load_cache": false,
+                "drop_cache": true
+            },
+            "patch_mincore": {
+                "trim_regions": false,
+                "from_records_size": 2048000000
+            },
+            "invocation": {
+                "use_mem_file": true,
+                "overlay_regions": false,
+                "use_ws_file": false
+            }
+        },
+        "reap": {
+            "name": "reap",
+            "prepare_steps": "reap",
+            "invoke_steps": "reap",
+            "patch_state": {
+                "dig_hole": false,
+                "load_cache": false,
+                "drop_cache": true
+            }
+        }
+    },
+    "functions": {
+        "hello": {
+            "id": "hello",
+            "name": "hello",
+            "image": "debian",
+            "kernel": "v4.14",
+            "params": [
+                "{}",
+                "{}"
+            ]
+        },
+        "mmap": {
+            "id": "mmap",
+            "name": "exec",
+            "image": "debian",
+            "kernel": "v4.14",
+            "params": [
+                "{\"script\":\"mm=mmap.mmap(-1, 1024*1024*512)\\nfor i in range(0, 1024*1024*512, 4096):\\n    mm[i]=1\\nmm.close()\"}",
+                "{\"script\":\"mm=mmap.mmap(-1, 1024*1024*512)\\nfor i in range(0, 1024*1024*512, 4096):\\n    mm[i]=1\\nmm.close()\"}"
+            ]
+        },
+        "read": {
+            "id": "read",
+            "name": "exec",
+            "image": "debian-list",
+            "kernel": "v4.14",
+            "params": [
+                "{\"script\":\"for i in range(0, len(l), 512):\\n    a=l[i]\"}",
+                "{\"script\":\"for i in range(0, len(l), 512):\\n    a=l[i]\"}"
+            ]
+        },
+        "ffmpeg": {
+            "id": "ffmpeg",
+            "name": "ffmpeg",
+            "image": "debian",
+            "kernel": "v4.14",
+            "params": [
+                "{\"input_object_key\":\"input1080p.mp4\", \"output_object_key\":\"output.mp4\"}",
+                "{\"input_object_key\":\"input1080p-2.mp4\", \"output_object_key\":\"output.mp4\"}"
+            ]
+        },
+        "json": {
+            "id": "json",
+            "name": "json",
+            "image": "debian",
+            "kernel": "v4.14",
+            "params": [
+                "{\"input_object_key\":\"IndiaGDP.json\"}",
+                "{\"input_object_key\":\"linux.json\"}"
+            ]
+        },
+        "image": {
+            "id": "image",
+            "name": "image",
+            "image": "debian",
+            "kernel": "v4.14",
+            "params": [
+                "{\"input_object_key\":\"100kb.jpg\", \"output_object_key_prefix\": \"outputimg-\"}",
+                "{\"input_object_key\":\"pexels-photo-2051572.jpeg\", \"output_object_key_prefix\": \"outputimg-\"}"
+            ]
+        },
+        "matmul": {
+            "id": "matmul",
+            "name": "matmul",
+            "image": "debian",
+            "kernel": "v4.14",
+            "params": [
+                "{\"n\":\"2000\"}",
+                "{\"n\":\"2200\"}"
+            ]
+        },
+        "pyaes": {
+            "id": "pyaes",
+            "name": "pyaes",
+            "image": "debian",
+            "kernel": "v4.14",
+            "params": [
+                "{\"length_of_message\":\"20000\", \"num_of_iterations\":\"1\"}",
+                "{\"length_of_message\":\"22000\", \"num_of_iterations\":\"1\"}"
+            ]
+        },
+        "chameleon": {
+            "id": "chameleon",
+            "name": "chameleon",
+            "image": "debian",
+            "kernel": "v4.14",
+            "params": [
+                "{\"num_of_rows\":\"100\", \"num_of_cols\":\"300\"}",
+                "{\"num_of_rows\":\"200\", \"num_of_cols\":\"200\"}"
+            ]
+        }
+    }
+}

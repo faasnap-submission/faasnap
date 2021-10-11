@@ -1,0 +1,11 @@
+[package]
+name = "jailer"
+version = "0.21.0"
+authors = ["Amazon Firecracker team <firecracker-devel@amazon.com>"]
+edition = "2018"
+
+[dependencies]
+libc = ">=0.2.39"
+regex = ">=1.0.0"
+
+utils = { path = "../utils" }

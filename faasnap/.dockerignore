@@ -1,0 +1,12 @@
+rootfs
+vmlinux.bin
+# cmd
+# models
+main
+# Swagger generated
+cmd
+kernel
+models
+restapi
+!restapi/configure_snapfaas.go
+python-client
